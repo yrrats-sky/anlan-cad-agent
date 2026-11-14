@@ -1,0 +1,9 @@
+{
+  "version": "v0.4.2",
+  "file": "anlan-cad-helper.zip",
+  "sha256": "01622E9E2EB36C690355D8424968C216404677369DDEEFB55AF19AEE16D1CA2C",
+  "exeFile": "anlan-cad-setup-v0.4.2.exe",
+  "exeSha256": "8612FA178C08CA802C402D04A24BE8FB88D4C6C3AC43CB41658385922EF0500B",
+  "supported": [ "R24.2" ],
+  "notes": "AutoCAD 2023 full; 2021-2026 pending forward-compat check"
+}

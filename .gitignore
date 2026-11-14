@@ -1,0 +1,23 @@
+# 密钥红线(公开 repo 前置清点,spec: dist-exe安装包落地方案.md 第四节)
+build/config.json
+dist/apikey.private.txt
+.device_flow.json
+.gh_token.txt
+
+# push 轨产物(含烘焙 key,绝不进 repo/外传)
+dist/*push*.zip
+dist/*push*.exe
+
+# bundle 内运行时烘焙 config(make-dist push 轨临时写入,可能含 key)
+dist/bundle/Contents/config.json
+dist/payload/
+
+# 编译/分发大产物不进 git,只上 GitHub Release assets(公开轨)
+build/*.dll
+build/SmokeTest.exe
+build/config.json
+dist/anlan-cad-helper.zip
+dist/anlan-cad-setup-*.exe
+
+# 工作区会话文档
+HANDOFF.md

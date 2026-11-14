@@ -1,0 +1,4 @@
+_.NETLOAD
+; DEPRECATED: NETLOAD path + old command name ANLANPING. Use HKCU loading + ANLANDEVASK. See HANDOFF.md.
+C:\Users\86159\.zcode\workspace\af326b29-9bae-46d2-b173-457c5aef3496\anlan-cad-agent\build\AnlanCadAcadFx48.dll
+_.ANLANPING

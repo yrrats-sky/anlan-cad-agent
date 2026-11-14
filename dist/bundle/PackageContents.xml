@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ApplicationPackage SchemaVersion="1.0" AppVersion="0.3.0"
+    Name="AnLan CAD Agent" Description="AnLan CAD teaching agent (NL draw/frame/check/undo)"
+    Author="AnLan">
+  <Components Description="AutoCAD R24.2 (2023)">
+    <RuntimeRequirements OS="Win64" Platform="AutoCAD" SeriesMin="R24.2" SeriesMax="R24.2" />
+    <ComponentEntry AppName="AnlanCadAgent"
+                    Module="./Contents/AnlanCadAcadFx48.dll"
+                    AppType="NET"
+                    LoadOnAutoCADStartup="True" />
+  </Components>
+</ApplicationPackage>

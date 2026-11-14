@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<style>
+  body { font-family: "Microsoft YaHei", sans-serif; background:#1B1F2B; color:#D7DAE2;
+         margin:0; display:flex; flex-direction:column; height:100vh; font-size:13px; }
+  header { padding:8px 12px; border-bottom:1px solid #2A2F3D; background:#161A24;
+           display:flex; align-items:center; gap:8px; }
+  header b { color:#7EC87E; }
+  #ver { color:#8A93A6; font-size:11px; }
+  .dot { font-size:10px; color:#8A93A6; }
+  .dot.ok { color:#7EC87E; }
+  .dot.warn { color:#E0B050; }
+  .dot.busy { color:#E0B050; }
+  #st { color:#8A93A6; font-size:11px; flex:1; overflow:hidden;
+        white-space:nowrap; text-overflow:ellipsis; }
+  .hbtn { background:#22262F; color:#9AA0A8; border:1px solid #3A3F4C; padding:3px 9px;
+          border-radius:5px; cursor:pointer; font-size:12px; }
+  .hbtn:hover { color:#E8E9EB; }
+  #log { flex:1; overflow-y:auto; padding:10px 12px; line-height:1.65; }
+  .m { margin:5px 0; padding:6px 10px; border-radius:8px; max-width:88%;
+       white-space:pre-wrap; word-break:break-all; }
+  .user { background:#2B5DD7; color:#fff; margin-left:auto; }
+  .assistant { background:#24422C; }
+  .error { background:#3A2626; color:#E0806C; }
+  .sys, .tool { background:transparent; color:#8A93A6; font-size:12px; padding:2px 4px; }
+  .t { color:#5A6170; font-size:10px; margin-right:6px; }
+  footer { padding:10px; border-top:1px solid #2A2F3D; display:flex; gap:6px; }
+  input { flex:1; background:#22262F; border:1px solid #3A3F4C; color:#E8E9EB;
+          padding:8px 10px; border-radius:6px; font-size:13px; outline:none; }
+  input:disabled { opacity:.5; }
+  #send { background:#2B5DD7; color:#fff; border:0; padding:8px 16px;
+          border-radius:6px; cursor:pointer; font-size:13px; }
+  #send:disabled { opacity:.5; cursor:default; }
+</style>
+</head>
+<body>
+<header>
+  <b>安岚助手</b><span id="ver"></span>
+  <span class="dot" id="dot">●</span><span id="st">连接中…</span>
+  <button class="hbtn" id="new" title="清空历史，开新会话">/new</button>
+  <button class="hbtn" id="gear" title="设置（接口/Key/模型），保存即生效">⚙</button>
+</header>
+<div id="log"><div class="m sys">我是内嵌在 CAD 里的制图助教，直接说需求，例如：「画一个半径 50 的圆」「画 A4 图框 标题 支座」。输 /new 可清空会话。</div></div>
+<footer>
+  <input id="box" placeholder="说个需求，或输 /new 开新会话">
+  <button id="send">发送</button>
+</footer>
+<script>
+var log = document.getElementById('log');
+var box = document.getElementById('box');
+var sendBtn = document.getElementById('send');
+var st = document.getElementById('st');
+var dot = document.getElementById('dot');
+var lastN = -1;                       // C#→JS 序号去重（双事件名兜底）
+
+function add(role, text, time) {
+  var d = document.createElement('div');
+  d.className = 'm ' + role;
+  if (time) {
+    var t = document.createElement('span');
+    t.className = 't'; t.textContent = time;
+    d.appendChild(t);
+  }
+  d.appendChild(document.createTextNode(text));
+  log.appendChild(d);
+  log.scrollTop = 1e9;
+}
+function post(o) { window.chrome.webview.postMessage(JSON.stringify(o)); }
+function send() {
+  var t = box.value.trim();
+  if (!t) return;
+  box.value = '';
+  post({ type: 'ask', text: t });     // 用户气泡由引擎回推，避免双显
+}
+function setBusy(b) {
+  box.disabled = b; sendBtn.disabled = b;
+  if (b) { st.textContent = '思考中…'; dot.className = 'dot busy'; }
+  else { st.textContent = st.dataset.model ? '就绪 · ' + st.dataset.model : '就绪';
+         dot.className = 'dot ok'; }
+}
+sendBtn.addEventListener('click', send);
+box.addEventListener('keydown', function (e) { if (e.key === 'Enter') send(); });
+document.getElementById('new').addEventListener('click', function () { post({ type: 'ask', text: '/new' }); });
+document.getElementById('gear').addEventListener('click', function () { post({ type: 'settings' }); });
+
+function onMsg(e) {
+  var m = e.data;
+  if (typeof m === 'string') { try { m = JSON.parse(m); } catch (ex) { add('sys', m, ''); return; } }
+  if (!m || typeof m !== 'object') return;
+  if (m.n !== undefined) { if (m.n <= lastN) return; lastN = m.n; }
+  if (m.type === 'init') {
+    document.getElementById('ver').textContent = m.version;
+    st.dataset.model = m.model;
+    if (m.busy) setBusy(true);
+    else if (!m.hasKey) { st.textContent = '未配置 Key（点 ⚙ 填入）'; dot.className = 'dot warn'; }
+    else setBusy(false);
+    if (m.loadError) add('sys', '⚠ 配置加载：' + m.loadError, '');
+  } else if (m.type === 'msg') {
+    add(m.role, m.text, m.time);
+    if (m.role === 'tool' && box.disabled) st.textContent = '执行工具…';
+  } else if (m.type === 'busy') {
+    setBusy(!!m.busy);
+  }
+}
+// 'message' 为 WebView2 标准事件名；'messagereceived' 兜底（n 序号去重防双显）
+window.chrome.webview.addEventListener('message', onMsg);
+window.chrome.webview.addEventListener('messagereceived', onMsg);
+post({ type: 'ready' });
+</script>
+</body>
+</html>
