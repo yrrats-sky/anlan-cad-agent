@@ -35,10 +35,11 @@ if (-not [Environment]::Is64BitOperatingSystem) {
 # ---- 1. 物料自检 ----
 $srcBundle = Join-Path $PSScriptRoot 'bundle'
 $srcDll    = Join-Path $srcBundle 'Contents\AnlanCadAcadFx48.dll'
+$srcDll10  = Join-Path $srcBundle 'Contents\AnlanCadAcadNet10.dll'
 $srcXml    = Join-Path $srcBundle 'PackageContents.xml'
 $srcWww    = Join-Path $srcBundle 'Contents\wwwroot\panel.html'
 $srcLoader = Join-Path $srcBundle 'Contents\WebView2Loader.dll'
-if (-not (Test-Path $srcDll) -or -not (Test-Path $srcXml) -or -not (Test-Path $srcWww) -or -not (Test-Path $srcLoader)) {
+if (-not (Test-Path $srcDll) -or -not (Test-Path $srcDll10) -or -not (Test-Path $srcXml) -or -not (Test-Path $srcWww) -or -not (Test-Path $srcLoader)) {
     Write-Output "[错误] 缺物料：$srcBundle （解压 zip 后应在同目录看到 bundle 文件夹）"; exit 1
 }
 
@@ -113,6 +114,9 @@ else { Remove-Item $bakedCfg -Force -ErrorAction SilentlyContinue }
 
 # ---- 4. HKCU 按需加载注册（每个支持版本各注册一份）----
 # 本方案已实测；NETLOAD 在部分机器静默卡死，勿改。LOADER 指向 bundle 里的 dll。
+# 双 dll 分流：2027 托管内核已迁 .NET 10（R26.0/ACAD-A101，acdbmgd.runtimeconfig tfm=net10.0
+# 实锤 2026-11-15）→ AnlanCadAcadNet10.dll；2021-2026(.NET 4.8) → AnlanCadAcadFx48.dll。
+# 2027 装载已在 VM 实测通（AcCoreConsole NETLOAD+PING → pong）；GUI 端到端验证后 pending 出列。
 $cmds = @('ANLANDEVPING','ANLANDEVPANEL','ANLANDEVASK','ANLANDEVBOOT','ANLANDEVSET','ANLANDEVWEB','ANLANDEVWPF')
 foreach ($v in $supported) {
     $app = "HKCU:\Software\Autodesk\AutoCAD\$($v.R)\$($v.Id)\Applications\AnlanCadAgent"
@@ -120,11 +124,12 @@ foreach ($v in $supported) {
     Set-ItemProperty $app 'DESCRIPTION' 'AnLan CAD teaching agent'
     Set-ItemProperty $app 'LOADCTRLS' 14        # int → REG_DWORD（Set-ItemProperty 无 -Type）
     Set-ItemProperty $app 'MANAGED' 1
-    Set-ItemProperty $app 'LOADER' (Join-Path $bundleDir 'Contents\AnlanCadAcadFx48.dll')
+    $dllName = if ($v.R -eq 'R26.0') { 'AnlanCadAcadNet10.dll' } else { 'AnlanCadAcadFx48.dll' }
+    Set-ItemProperty $app 'LOADER' (Join-Path $bundleDir "Contents\$dllName")
     New-Item -Path "$app\Commands" -Force | Out-Null
     foreach ($c in $cmds) { Set-ItemProperty "$app\Commands" $c 'ANLANGRP' }
 }
-Write-Output '[3/6] HKCU 按需加载已注册（输命令即自动加载 dll）'
+Write-Output '[3/6] HKCU 按需加载已注册（输命令即自动加载 dll；2027 走 Net10，其余 Fx48）'
 
 # ---- 5. acaddoc.lsp 钩子 ----
 # 主位置 = Roaming Support（per-user 可写，免管理员）；install-dir Support 里的旧钩子迁移清理。

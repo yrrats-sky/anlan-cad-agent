@@ -2,7 +2,6 @@
 // 独立于主工具循环 → 主循环 tool result 保持纯文本，兼容性无虞
 using System;
 using System.Collections.Generic;
-using System.Web.Script.Serialization;
 
 namespace AnlanCadCore
 {
@@ -33,10 +32,10 @@ namespace AnlanCadCore
             string resp = HttpJson.Post(
                 cfg.BaseUrl.TrimEnd('/') + "/chat/completions",
                 cfg.ApiKey,
-                new JavaScriptSerializer().Serialize(body),
+                new JsX().Serialize(body),
                 LlmConfig.VlmTimeoutMs);
 
-            var ser = new JavaScriptSerializer();
+            var ser = new JsX();
             var root = ser.Deserialize<Dictionary<string, object>>(resp);
             if (root == null) throw new Exception("VLM 响应解析失败: " + HttpJson.Trunc(resp, 300));
             object errObj;

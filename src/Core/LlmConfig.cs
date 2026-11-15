@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Reflection;
-using System.Web.Script.Serialization;
 
 namespace AnlanCadCore
 {
@@ -51,7 +50,7 @@ namespace AnlanCadCore
             if (path == null) return new LlmConfig();
             try
             {
-                var ser = new JavaScriptSerializer();
+                var ser = new JsX();
                 var d = ser.Deserialize<Dictionary<string, object>>(File.ReadAllText(path));
                 var c = new LlmConfig();
                 if (d.ContainsKey("baseUrl") && d["baseUrl"] != null)
@@ -94,7 +93,7 @@ namespace AnlanCadCore
             d["apiKey"] = c.ApiKey ?? "";
             d["model"] = c.Model ?? "";
             d["vlmModel"] = c.VlmModel ?? "";
-            File.WriteAllText(path, new JavaScriptSerializer().Serialize(d));
+            File.WriteAllText(path, new JsX().Serialize(d));
         }
     }
 }

@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Web.Script.Serialization;
 using System.Windows;
 using System.Windows.Controls;
 using AnlanCadCore;
@@ -142,7 +141,7 @@ namespace AnlanCadAcadFx48
                 try
                 {
                     string resp = HttpJson.Get(baseUrl.TrimEnd('/') + "/models", apiKey, 20000);
-                    var root = new JavaScriptSerializer().Deserialize<Dictionary<string, object>>(resp);
+                    var root = new JsX().Deserialize<Dictionary<string, object>>(resp);
                     var ids = new List<string>();
                     object dataObj;
                     if (root != null && root.TryGetValue("data", out dataObj))

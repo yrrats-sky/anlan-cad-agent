@@ -9,10 +9,10 @@ set WV2=%ROOT%\lib\WebView2
 set OUT=%ROOT%\build\AnlanCadAcadFx48.dll
 if not exist "%ROOT%\build" mkdir "%ROOT%\build"
 
-set CORE=%ROOT%\src\Core\LlmConfig.cs %ROOT%\src\Core\ToolRegistry.cs %ROOT%\src\Core\AgentLoop.cs %ROOT%\src\Core\HttpJson.cs %ROOT%\src\Core\VlmClient.cs
+set CORE=%ROOT%\src\Core\JsX.cs %ROOT%\src\Core\LlmConfig.cs %ROOT%\src\Core\ToolRegistry.cs %ROOT%\src\Core\AgentLoop.cs %ROOT%\src\Core\HttpJson.cs %ROOT%\src\Core\VlmClient.cs
 set HOST=%ROOT%\src\AnlanCadAcadFx48\Entry.cs %ROOT%\src\AnlanCadAcadFx48\AgentEngine.cs %ROOT%\src\AnlanCadAcadFx48\PaletteHost.cs %ROOT%\src\AnlanCadAcadFx48\SettingsForm.cs %ROOT%\src\AnlanCadAcadFx48\WebShell.cs %ROOT%\src\AnlanCadAcadFx48\CadBridge.cs
 
-"%CSC%" /nologo /target:library /optimize+ /out:"%OUT%" ^
+"%CSC%" /nologo /define:FX48 /target:library /optimize+ /out:"%OUT%" ^
   /r:"%ACAD%\acmgd.dll" ^
   /r:"%ACAD%\acdbmgd.dll" ^
   /r:"%ACAD%\accoremgd.dll" ^
@@ -35,7 +35,7 @@ copy /y "%WV2%\Microsoft.Web.WebView2.Wpf.dll" "%ROOT%\build\" >nul
 copy /y "%WV2%\WebView2Loader.dll" "%ROOT%\build\" >nul
 xcopy /e /i /y "%ROOT%\src\AnlanCadAcadFx48\wwwroot" "%ROOT%\build\wwwroot" >nul
 
-"%CSC%" /nologo /target:exe /optimize+ /out:"%ROOT%\build\SmokeTest.exe" ^
+"%CSC%" /nologo /define:FX48 /target:exe /optimize+ /out:"%ROOT%\build\SmokeTest.exe" ^
   /r:"%Fx%\System.dll" ^
   /r:"%Fx%\System.Core.dll" ^
   /r:"%Fx%\System.Web.Extensions.dll" ^

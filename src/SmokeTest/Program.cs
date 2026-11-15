@@ -20,7 +20,7 @@ namespace AnlanCadSmoke
             if (string.IsNullOrEmpty(cfg.ApiKey)) return 2;
 
             // schema 自检：8 个工具 JSON 必须全部可解析
-            var ser0 = new System.Web.Script.Serialization.JavaScriptSerializer();
+            var ser0 = new AnlanCadCore.JsX();
             for (int i = 0; i < ToolRegistry.Schemas.Length; i++)
             {
                 try

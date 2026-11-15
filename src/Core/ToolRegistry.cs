@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Web.Script.Serialization;
 
 namespace AnlanCadCore
 {
@@ -115,7 +114,7 @@ namespace AnlanCadCore
 
         private static string[] BuildSchemaStrings()
         {
-            var ser = new JavaScriptSerializer();
+            var ser = new JsX();
             var arr = new string[_schemaObjs.Length];
             for (int i = 0; i < _schemaObjs.Length; i++)
             {
@@ -205,7 +204,7 @@ namespace AnlanCadCore
         public static Dictionary<string, object> ParseArgs(string json)
         {
             if (string.IsNullOrEmpty(json)) return new Dictionary<string, object>();
-            var ser = new JavaScriptSerializer();
+            var ser = new JsX();
             return ser.Deserialize<Dictionary<string, object>>(json);
         }
     }

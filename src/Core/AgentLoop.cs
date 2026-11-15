@@ -6,7 +6,6 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading;
-using System.Web.Script.Serialization;
 
 namespace AnlanCadCore
 {
@@ -68,7 +67,7 @@ namespace AnlanCadCore
                 um["content"] = userText;
                 _messages.Add(um);
 
-                var ser = new JavaScriptSerializer();
+                var ser = new JsX();
                 bool gotFinal = false;
                 for (int round = 0; round < MaxRounds; round++)
                 {
@@ -137,7 +136,7 @@ namespace AnlanCadCore
 
         // 中转站上游限流是间歇性的，且 WAF 会用 HTTP 200 + HTML 错误页伪装：
         // 异常和响应体两条路都做限流判定，指数退避（8/15/30s）后重试
-        private string PostChatWithRetry(JavaScriptSerializer ser)
+        private string PostChatWithRetry(JsX ser)
         {
             string url = _cfg.BaseUrl.TrimEnd('/') + "/chat/completions";
             string body = BuildBody(ser);
@@ -178,7 +177,7 @@ namespace AnlanCadCore
 
         // 含 choices 的合法 JSON 放行（交 ParseChoiceMessage 判错），避免正文聊到"429"
         // 被子串匹配误判触发退避；HTML 错误页/无 choices/解析失败 → 退避
-        private static bool ShouldBackoff(string resp, JavaScriptSerializer ser)
+        private static bool ShouldBackoff(string resp, JsX ser)
         {
             if (resp.IndexOf("\"choices\"") < 0) return true;
             try { return ser.DeserializeObject(resp) == null; }
@@ -212,7 +211,7 @@ namespace AnlanCadCore
             _messages.RemoveRange(1, cut - 1);
         }
 
-        private string BuildBody(JavaScriptSerializer ser)
+        private string BuildBody(JsX ser)
         {
             TrimHistory();
             object[] schemas = ToolRegistry.SchemaObjects;   // 静态已构建，免每轮反序列化
@@ -225,7 +224,7 @@ namespace AnlanCadCore
         }
 
         private static Dictionary<string, object> ParseChoiceMessage(
-            string resp, JavaScriptSerializer ser)
+            string resp, JsX ser)
         {
             var root = ser.Deserialize<Dictionary<string, object>>(resp);
             if (root == null) throw new Exception("LLM 响应解析失败");

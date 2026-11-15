@@ -11,7 +11,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Web.Script.Serialization;
 using System.Windows.Controls;
 using AnlanCadCore;
 using Autodesk.AutoCAD.Windows;
@@ -316,7 +315,7 @@ namespace AnlanCadAcadFx48
             if (wv == null || wv.CoreWebView2 == null) return;
             _seq++;
             d["n"] = _seq;
-            wv.CoreWebView2.PostWebMessageAsJson(new JavaScriptSerializer().Serialize(d));
+            wv.CoreWebView2.PostWebMessageAsJson(new JsX().Serialize(d));
         }
 
         private static Dictionary<string, object> Parse(string json)
@@ -324,7 +323,7 @@ namespace AnlanCadAcadFx48
             if (json == null || json.Length == 0) return null;
             try
             {
-                return new JavaScriptSerializer().DeserializeObject(json)
+                return new JsX().DeserializeObject(json)
                     as Dictionary<string, object>;
             }
             catch (Exception) { return null; }

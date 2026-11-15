@@ -25,6 +25,11 @@ set VER2=%VER:v=%
 if not exist "%BUNDLE%\Contents" mkdir "%BUNDLE%\Contents"
 copy /y "%~dp0..\build\AnlanCadAcadFx48.dll" "%BUNDLE%\Contents\" >nul
 if errorlevel 1 (echo dll copy FAILED - close AutoCAD first & exit /b 1)
+REM ---- Net10 dll (AutoCAD 2027 托管内核 = .NET 10；install.ps1 按 R26.0 分流 HKCU LOADER) ----
+dotnet build "%~dp0..\src\AnlanCadAcadNet10\AnlanCadAcadNet10.csproj" -c Release -v q --nologo
+if errorlevel 1 (echo NET10 BUILD FAILED & exit /b 1)
+copy /y "%~dp0..\src\AnlanCadAcadNet10\bin\Release\net10.0-windows\AnlanCadAcadNet10.dll" "%BUNDLE%\Contents\" >nul
+if errorlevel 1 (echo Net10 dll copy FAILED & exit /b 1)
 copy /y "%~dp0..\lib\WebView2\Microsoft.Web.WebView2.Core.dll" "%BUNDLE%\Contents\" >nul
 copy /y "%~dp0..\lib\WebView2\Microsoft.Web.WebView2.Wpf.dll" "%BUNDLE%\Contents\" >nul
 copy /y "%~dp0..\lib\WebView2\WebView2Loader.dll" "%BUNDLE%\Contents\" >nul
@@ -107,7 +112,7 @@ if defined EXEBUILT for /f %%h in ('powershell -NoProfile -Command "(Get-FileHas
 >> "%~dp0version.json" echo   "exeFile": "%EXEFILE%",
 >> "%~dp0version.json" echo   "exeSha256": "%EXESHA%",
 >> "%~dp0version.json" echo   "supported": [ "R24.2" ],
->> "%~dp0version.json" echo   "notes": "AutoCAD 2023 full; 2021-2026 pending forward-compat check"
+>> "%~dp0version.json" echo   "notes": "AutoCAD 2023 full; 2021-2026 pending; 2027 Net10 loader OK (GUI pending)"
 >> "%~dp0version.json" echo }
 echo version.json ready: %VER% sha256=%SHA256% exeSha256=%EXESHA%
 
