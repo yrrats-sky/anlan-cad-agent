@@ -11,7 +11,7 @@ namespace AnlanCadAcadFx48
 {
     public class Entry : IExtensionApplication
     {
-        public const string Version = "v0.4.3";   // 唯一版本源（原 Entry/PaletteHost 三处硬编码且不一致）
+        public const string Version = "v0.4.4";   // 唯一版本源（原 Entry/PaletteHost 三处硬编码且不一致）
 
         public void Initialize()
         {

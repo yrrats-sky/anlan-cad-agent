@@ -1,11 +1,11 @@
 ﻿# 安岚CAD助手 教师机安装器 v2.0（2026-11-11 分发整改版）
 # 整改内容（对应 dist-分发决策审查.md 清单）：钩子迁 Roaming Support（免管理员为真）+
-# 旧位置迁移清理；版本枚举 R21-R26+ 分级（2023 全量 / 2021-2026 待验证 / 2017-2020 不支持）；
+# 旧位置迁移清理；版本枚举 R21-R26+ 分级（2023/2027 全量 / 2021-2026 兼容模式 / 2017-2020 不支持）；
 # bundle 落位 ProgramData 失败自动兜底 %APPDATA%；WebView2 运行时检测；双轨 config
 # （bundle 内烘焙 config.json 支持地推 key）；-ReportUrl 可选回传；32 位拒绝。
 # 用法：powershell -ExecutionPolicy Bypass -File install.ps1 [-ApiKey sk-xxx] [-ReportUrl https://...]
 # 幂等：重复运行安全；卸载用 uninstall.ps1（双位置钩子精确清理）
-# 适用：AutoCAD 2021-2026（64 位）；绿色版/精简版不支持
+# 适用：AutoCAD 2021-2027（64 位）；绿色版/精简版不支持
 param([string]$ApiKey = "", [string]$ReportUrl = "")
 $ErrorActionPreference = 'Stop'
 
@@ -44,7 +44,8 @@ if (-not (Test-Path $srcDll) -or -not (Test-Path $srcDll10) -or -not (Test-Path 
 }
 
 # ---- 2. 版本枚举 + 分级 ----
-# full=R24.2(2023) 实测全量支持；pending=R24.x 其余(2021/2022/2024)+R25+(2025/2026) 注册但标待验证；
+# full=R24.2(2023) + R26.0(2027，.NET 10 内核走 Net10 dll，GUI 端到端 11-15 实测过) 全量支持；
+# pending=R24.x 其余(2021/2022/2024)+R25.x(2025/2026) 注册但标待验证；
 # old=R23-(2017-2020) 不支持
 # 显式 64 位注册表视图：Inno [Run] 的 powershell 是 32 位（WOW64），Get-ChildItem HKLM:
 # 会被重定向到 Wow6432Node 看不到 Autodesk 键 → 教师机装机 exit 1（11-14 实测根因）
@@ -66,7 +67,7 @@ try {
                 $major = 0
                 if ($r -match '^R(\d+)') { $major = [int]$Matches[1] }
                 $grade = 'old'
-                if ($r -eq 'R24.2') { $grade = 'full' }
+                if ($r -eq 'R24.2' -or $r -eq 'R26.0') { $grade = 'full' }
                 elseif ($major -ge 24) { $grade = 'pending' }
                 $versions += [pscustomobject]@{ R = $r; Id = $l.Split(':')[0]; Loc = $loc; Grade = $grade }
             }
@@ -76,7 +77,7 @@ try {
     }
 } catch { }
 if (-not $versions) {
-    Write-Output '[错误] 未检测到注册表安装的 AutoCAD（绿色版/精简版暂不支持，请安装官方版 2021-2026）。'
+    Write-Output '[错误] 未检测到注册表安装的 AutoCAD（绿色版/精简版暂不支持，请安装官方版 2021-2027）。'
     exit 1
 }
 Write-Output '[1/6] 检测到 AutoCAD：'
@@ -116,7 +117,7 @@ else { Remove-Item $bakedCfg -Force -ErrorAction SilentlyContinue }
 # 本方案已实测；NETLOAD 在部分机器静默卡死，勿改。LOADER 指向 bundle 里的 dll。
 # 双 dll 分流：2027 托管内核已迁 .NET 10（R26.0/ACAD-A101，acdbmgd.runtimeconfig tfm=net10.0
 # 实锤 2026-11-15）→ AnlanCadAcadNet10.dll；2021-2026(.NET 4.8) → AnlanCadAcadFx48.dll。
-# 2027 装载已在 VM 实测通（AcCoreConsole NETLOAD+PING → pong）；GUI 端到端验证后 pending 出列。
+# 2027 已全链实测（AcCoreConsole PONG-OK + GUI 端到端画线 11-15）→ R26.0 与 2023 同列 full。
 $cmds = @('ANLANDEVPING','ANLANDEVPANEL','ANLANDEVASK','ANLANDEVBOOT','ANLANDEVSET','ANLANDEVWEB','ANLANDEVWPF')
 foreach ($v in $supported) {
     $app = "HKCU:\Software\Autodesk\AutoCAD\$($v.R)\$($v.Id)\Applications\AnlanCadAgent"
@@ -291,5 +292,5 @@ if ($ReportUrl -ne '') {
 Write-Output ''
 Write-Output '安装完成。重启 AutoCAD 后打开任意图纸，右侧自动出现「安岚助手」面板。'
 if (@($versions | Where-Object { $_.Grade -eq 'pending' }).Count -gt 0) {
-    Write-Output '注意：本次按兼容模式安装了非 2023 版本，功能待前向兼容验证，遇异常请反馈。'
+    Write-Output '注意：本次按兼容模式安装了非 2023/2027 版本，功能待前向兼容验证，遇异常请反馈。'
 }

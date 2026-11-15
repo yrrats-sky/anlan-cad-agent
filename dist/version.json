@@ -1,9 +1,9 @@
 {
-  "version": "v0.4.3",
+  "version": "v0.4.4",
   "file": "anlan-cad-helper.zip",
-  "sha256": "A81E6A4F01CBE32126DFEE20B4D63E12A7CB4003B5DC5FC7731D166F69D25A83",
-  "exeFile": "anlan-cad-setup-v0.4.3.exe",
-  "exeSha256": "09E3CD17E554C5823FA3EBE8B6B280F916E86E236AAE1729F3D59C647270E684",
-  "supported": [ "R24.2" ],
-  "notes": "AutoCAD 2023 full; 2021-2026 pending; 2027 Net10 loader OK (GUI pending)"
+  "sha256": "CCD5FE6E108B913974CE3B131874FCD890478773331393131A6342BC066FB925",
+  "exeFile": "anlan-cad-setup-v0.4.4.exe",
+  "exeSha256": "51581DB8873F1420F129DCAA405B7B6B2917D97D1DFC14B8DB684E77902BDA74",
+  "supported": [ "R24.2", "R26.0" ],
+  "notes": "AutoCAD 2023 full; 2027 (.NET 10) full; 2021-2026 compatibility mode"
 }

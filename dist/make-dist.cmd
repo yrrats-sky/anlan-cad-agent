@@ -111,8 +111,8 @@ if defined EXEBUILT for /f %%h in ('powershell -NoProfile -Command "(Get-FileHas
 >> "%~dp0version.json" echo   "sha256": "%SHA256%",
 >> "%~dp0version.json" echo   "exeFile": "%EXEFILE%",
 >> "%~dp0version.json" echo   "exeSha256": "%EXESHA%",
->> "%~dp0version.json" echo   "supported": [ "R24.2" ],
->> "%~dp0version.json" echo   "notes": "AutoCAD 2023 full; 2021-2026 pending; 2027 Net10 loader OK (GUI pending)"
+>> "%~dp0version.json" echo   "supported": [ "R24.2", "R26.0" ],
+>> "%~dp0version.json" echo   "notes": "AutoCAD 2023 full; 2027 (.NET 10) full; 2021-2026 compatibility mode"
 >> "%~dp0version.json" echo }
 echo version.json ready: %VER% sha256=%SHA256% exeSha256=%EXESHA%
 
