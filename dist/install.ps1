@@ -1,6 +1,6 @@
 ﻿# 安岚CAD助手 教师机安装器 v2.0（2026-11-11 分发整改版）
 # 整改内容（对应 dist-分发决策审查.md 清单）：钩子迁 Roaming Support（免管理员为真）+
-# 旧位置迁移清理；版本枚举 R21-R26+ 分级（2023/2027 全量 / 2021-2026 兼容模式 / 2017-2020 不支持）；
+# 旧位置迁移清理；版本枚举 R21-R26+ 分级（2023-2027 全量 / 2021-2022 兼容模式 / 2017-2020 不支持）；
 # bundle 落位 ProgramData 失败自动兜底 %APPDATA%；WebView2 运行时检测；双轨 config
 # （bundle 内烘焙 config.json 支持地推 key）；-ReportUrl 可选回传；32 位拒绝。
 # 用法：powershell -ExecutionPolicy Bypass -File install.ps1 [-ApiKey sk-xxx] [-ReportUrl https://...]
@@ -36,17 +36,19 @@ if (-not [Environment]::Is64BitOperatingSystem) {
 $srcBundle = Join-Path $PSScriptRoot 'bundle'
 $srcDll    = Join-Path $srcBundle 'Contents\AnlanCadAcadFx48.dll'
 $srcDll10  = Join-Path $srcBundle 'Contents\AnlanCadAcadNet10.dll'
+$srcDll8   = Join-Path $srcBundle 'Contents\AnlanCadAcadNet8.dll'
+$srcDll825 = Join-Path $srcBundle 'Contents\AnlanCadAcadNet8_25.dll'
 $srcXml    = Join-Path $srcBundle 'PackageContents.xml'
 $srcWww    = Join-Path $srcBundle 'Contents\wwwroot\panel.html'
 $srcLoader = Join-Path $srcBundle 'Contents\WebView2Loader.dll'
-if (-not (Test-Path $srcDll) -or -not (Test-Path $srcDll10) -or -not (Test-Path $srcXml) -or -not (Test-Path $srcWww) -or -not (Test-Path $srcLoader)) {
+if (-not (Test-Path $srcDll) -or -not (Test-Path $srcDll10) -or -not (Test-Path $srcDll8) -or -not (Test-Path $srcDll825) -or -not (Test-Path $srcXml) -or -not (Test-Path $srcWww) -or -not (Test-Path $srcLoader)) {
     Write-Output "[错误] 缺物料：$srcBundle （解压 zip 后应在同目录看到 bundle 文件夹）"; exit 1
 }
 
 # ---- 2. 版本枚举 + 分级 ----
-# full=R24.2(2023) + R26.0(2027，.NET 10 内核走 Net10 dll，GUI 端到端 11-15 实测过) 全量支持；
-# pending=R24.x 其余(2021/2022/2024)+R25.x(2025/2026) 注册但标待验证；
-# old=R23-(2017-2020) 不支持
+# full=R24.2(2023) + R24.3(2024) + R25.0(2025) + R25.1(2026) + R26.0(2027) 全量支持；
+#   2024 前向绑定 11-16 实测过（Fx48 24.2 引用在 24.3 宿主 PONG + GUI 端到端均通过）
+# pending=R24.0/R24.1(2021/2022) 注册但标待验证；old=R23-(2017-2020) 不支持
 # 显式 64 位注册表视图：Inno [Run] 的 powershell 是 32 位（WOW64），Get-ChildItem HKLM:
 # 会被重定向到 Wow6432Node 看不到 Autodesk 键 → 教师机装机 exit 1（11-14 实测根因）
 $versions = @()
@@ -67,7 +69,7 @@ try {
                 $major = 0
                 if ($r -match '^R(\d+)') { $major = [int]$Matches[1] }
                 $grade = 'old'
-                if ($r -eq 'R24.2' -or $r -eq 'R26.0') { $grade = 'full' }
+                if ($r -eq 'R24.2' -or $r -eq 'R24.3' -or $r -eq 'R26.0' -or $r -eq 'R25.0' -or $r -eq 'R25.1') { $grade = 'full' }
                 elseif ($major -ge 24) { $grade = 'pending' }
                 $versions += [pscustomobject]@{ R = $r; Id = $l.Split(':')[0]; Loc = $loc; Grade = $grade }
             }
@@ -115,9 +117,14 @@ else { Remove-Item $bakedCfg -Force -ErrorAction SilentlyContinue }
 
 # ---- 4. HKCU 按需加载注册（每个支持版本各注册一份）----
 # 本方案已实测；NETLOAD 在部分机器静默卡死，勿改。LOADER 指向 bundle 里的 dll。
-# 双 dll 分流：2027 托管内核已迁 .NET 10（R26.0/ACAD-A101，acdbmgd.runtimeconfig tfm=net10.0
-# 实锤 2026-11-15）→ AnlanCadAcadNet10.dll；2021-2026(.NET 4.8) → AnlanCadAcadFx48.dll。
-# 2027 已全链实测（AcCoreConsole PONG-OK + GUI 端到端画线 11-15）→ R26.0 与 2023 同列 full。
+# 四 dll 分流（内核实锤：2025/2026 acdbmgd.runtimeconfig tfm=net8.0、2027 tfm=net10.0）：
+#   R26.0(2027) → AnlanCadAcadNet10.dll（GUI 端到端 11-15 实测过）
+#   R25.1(2026) → AnlanCadAcadNet8.dll（GUI 端到端 CDP 自动化 11-16 实测过）
+#   R25.0(2025) → AnlanCadAcadNet8_25.dll（GUI 端到端 CDP 自动化 11-16 实测过）
+#   其余(R24.x .NET 4.8) → AnlanCadAcadFx48.dll
+# 关键坑（11-16 深夜破案）：Fx48 dll 在 2025/2026 的 .NET 8 宿主里"能载但残废"——
+# 兼容垫片放行 NETLOAD+PONG，但 System.Web.Extensions(JavaScriptSerializer) 为 FX-only，
+# JsX 静默失效 → 面板握手死（永远"连接中"）。smoke 的 PONG 判定会漏掉这层，勿单凭 PONG 定性。
 $cmds = @('ANLANDEVPING','ANLANDEVPANEL','ANLANDEVASK','ANLANDEVBOOT','ANLANDEVSET','ANLANDEVWEB','ANLANDEVWPF')
 foreach ($v in $supported) {
     $app = "HKCU:\Software\Autodesk\AutoCAD\$($v.R)\$($v.Id)\Applications\AnlanCadAgent"
@@ -125,12 +132,17 @@ foreach ($v in $supported) {
     Set-ItemProperty $app 'DESCRIPTION' 'AnLan CAD teaching agent'
     Set-ItemProperty $app 'LOADCTRLS' 14        # int → REG_DWORD（Set-ItemProperty 无 -Type）
     Set-ItemProperty $app 'MANAGED' 1
-    $dllName = if ($v.R -eq 'R26.0') { 'AnlanCadAcadNet10.dll' } else { 'AnlanCadAcadFx48.dll' }
+    $dllName = switch ($v.R) {
+        'R26.0' { 'AnlanCadAcadNet10.dll' }
+        'R25.1' { 'AnlanCadAcadNet8.dll' }
+        'R25.0' { 'AnlanCadAcadNet8_25.dll' }
+        default { 'AnlanCadAcadFx48.dll' }
+    }
     Set-ItemProperty $app 'LOADER' (Join-Path $bundleDir "Contents\$dllName")
     New-Item -Path "$app\Commands" -Force | Out-Null
     foreach ($c in $cmds) { Set-ItemProperty "$app\Commands" $c 'ANLANGRP' }
 }
-Write-Output '[3/6] HKCU 按需加载已注册（输命令即自动加载 dll；2027 走 Net10，其余 Fx48）'
+Write-Output '[3/6] HKCU 按需加载已注册（输命令即自动加载 dll；2027 走 Net10，2025/2026 走 Net8 双适配，2023/2024 走 Fx48）'
 
 # ---- 5. acaddoc.lsp 钩子 ----
 # 主位置 = Roaming Support（per-user 可写，免管理员）；install-dir Support 里的旧钩子迁移清理。

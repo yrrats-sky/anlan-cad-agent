@@ -24,6 +24,8 @@ HANDOFF.md
 
 # 2027 引用程序集(Autodesk 专有,从实机安装目录抓取,不入公开 repo——抓取法见 scripts/pull-2027-mgd.ps1)
 lib/acad2027/
+lib/acad2025/
+lib/acad2026/
 # VM 沙盒工具(含 VM 本机账号密码)
 scripts/vm-*.ps1
 # 诊断输出

@@ -30,6 +30,16 @@ dotnet build "%~dp0..\src\AnlanCadAcadNet10\AnlanCadAcadNet10.csproj" -c Release
 if errorlevel 1 (echo NET10 BUILD FAILED & exit /b 1)
 copy /y "%~dp0..\src\AnlanCadAcadNet10\bin\Release\net10.0-windows\AnlanCadAcadNet10.dll" "%BUNDLE%\Contents\" >nul
 if errorlevel 1 (echo Net10 dll copy FAILED & exit /b 1)
+REM ---- Net8 dll (AutoCAD 2026 = .NET 8 内核，R25.1 分流) + Net8_25 dll (AutoCAD 2025，R25.0 分流) ----
+REM Fx48 在 .NET 8 宿主"能载但残废"（JavaScriptSerializer 缺失 → 面板握手死），2025/2026 必须走 Net8 适配
+dotnet build "%~dp0..\src\AnlanCadAcadNet8\AnlanCadAcadNet8.csproj" -c Release -v q --nologo
+if errorlevel 1 (echo NET8 BUILD FAILED & exit /b 1)
+copy /y "%~dp0..\src\AnlanCadAcadNet8\bin\Release\net8.0-windows\AnlanCadAcadNet8.dll" "%BUNDLE%\Contents\" >nul
+if errorlevel 1 (echo Net8 dll copy FAILED & exit /b 1)
+dotnet build "%~dp0..\src\AnlanCadAcadNet8_25\AnlanCadAcadNet8_25.csproj" -c Release -v q --nologo
+if errorlevel 1 (echo NET8_25 BUILD FAILED & exit /b 1)
+copy /y "%~dp0..\src\AnlanCadAcadNet8_25\bin\Release\net8.0-windows\AnlanCadAcadNet8_25.dll" "%BUNDLE%\Contents\" >nul
+if errorlevel 1 (echo Net8_25 dll copy FAILED & exit /b 1)
 copy /y "%~dp0..\lib\WebView2\Microsoft.Web.WebView2.Core.dll" "%BUNDLE%\Contents\" >nul
 copy /y "%~dp0..\lib\WebView2\Microsoft.Web.WebView2.Wpf.dll" "%BUNDLE%\Contents\" >nul
 copy /y "%~dp0..\lib\WebView2\WebView2Loader.dll" "%BUNDLE%\Contents\" >nul
@@ -111,8 +121,8 @@ if defined EXEBUILT for /f %%h in ('powershell -NoProfile -Command "(Get-FileHas
 >> "%~dp0version.json" echo   "sha256": "%SHA256%",
 >> "%~dp0version.json" echo   "exeFile": "%EXEFILE%",
 >> "%~dp0version.json" echo   "exeSha256": "%EXESHA%",
->> "%~dp0version.json" echo   "supported": [ "R24.2", "R26.0" ],
->> "%~dp0version.json" echo   "notes": "AutoCAD 2023 full; 2027 (.NET 10) full; 2021-2026 compatibility mode"
+>> "%~dp0version.json" echo   "supported": [ "R24.2", "R24.3", "R25.0", "R25.1", "R26.0" ],
+>> "%~dp0version.json" echo   "notes": "AutoCAD 2023/2024/2025/2026/2027 full (2025/2026 via Net8 adapters); 2021/2022 compatibility mode"
 >> "%~dp0version.json" echo }
 echo version.json ready: %VER% sha256=%SHA256% exeSha256=%EXESHA%
 

@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "qmPkuv9fB6E=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\86159\\.zcode\\workspace\\af326b29-9bae-46d2-b173-457c5aef3496\\anlan-cad-agent\\src\\AnlanCadAcadNet8_25\\AnlanCadAcadNet8_25.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\86159\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.34\\microsoft.netcore.app.ref.8.0.34.nupkg.sha512",
+    "C:\\Users\\86159\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.34\\microsoft.windowsdesktop.app.ref.8.0.34.nupkg.sha512",
+    "C:\\Users\\86159\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.34\\microsoft.aspnetcore.app.ref.8.0.34.nupkg.sha512"
+  ],
+  "logs": []
+}

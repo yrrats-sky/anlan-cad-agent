@@ -1,0 +1,16 @@
+C:\Users\86159\.zcode\workspace\af326b29-9bae-46d2-b173-457c5aef3496\anlan-cad-agent\src\AnlanCadAcadNet8_25\bin\Release\net8.0-windows\AnlanCadAcadNet8_25.deps.json
+C:\Users\86159\.zcode\workspace\af326b29-9bae-46d2-b173-457c5aef3496\anlan-cad-agent\src\AnlanCadAcadNet8_25\bin\Release\net8.0-windows\AnlanCadAcadNet8_25.dll
+C:\Users\86159\.zcode\workspace\af326b29-9bae-46d2-b173-457c5aef3496\anlan-cad-agent\src\AnlanCadAcadNet8_25\bin\Release\net8.0-windows\AnlanCadAcadNet8_25.pdb
+C:\Users\86159\.zcode\workspace\af326b29-9bae-46d2-b173-457c5aef3496\anlan-cad-agent\src\AnlanCadAcadNet8_25\bin\Release\net8.0-windows\Microsoft.Web.WebView2.Core.dll
+C:\Users\86159\.zcode\workspace\af326b29-9bae-46d2-b173-457c5aef3496\anlan-cad-agent\src\AnlanCadAcadNet8_25\bin\Release\net8.0-windows\Microsoft.Web.WebView2.Wpf.dll
+C:\Users\86159\.zcode\workspace\af326b29-9bae-46d2-b173-457c5aef3496\anlan-cad-agent\src\AnlanCadAcadNet8_25\obj\Release\net8.0-windows\AnlanCadAcadNet8_25.csproj.AssemblyReference.cache
+C:\Users\86159\.zcode\workspace\af326b29-9bae-46d2-b173-457c5aef3496\anlan-cad-agent\src\AnlanCadAcadNet8_25\obj\Release\net8.0-windows\AnlanCadAcadNet8_25.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\86159\.zcode\workspace\af326b29-9bae-46d2-b173-457c5aef3496\anlan-cad-agent\src\AnlanCadAcadNet8_25\obj\Release\net8.0-windows\AnlanCadAcadNet8_25.AssemblyInfoInputs.cache
+C:\Users\86159\.zcode\workspace\af326b29-9bae-46d2-b173-457c5aef3496\anlan-cad-agent\src\AnlanCadAcadNet8_25\obj\Release\net8.0-windows\AnlanCadAcadNet8_25.AssemblyInfo.cs
+C:\Users\86159\.zcode\workspace\af326b29-9bae-46d2-b173-457c5aef3496\anlan-cad-agent\src\AnlanCadAcadNet8_25\obj\Release\net8.0-windows\AnlanCadAcadNet8_25.csproj.CoreCompileInputs.cache
+C:\Users\86159\.zcode\workspace\af326b29-9bae-46d2-b173-457c5aef3496\anlan-cad-agent\src\AnlanCadAcadNet8_25\obj\Release\net8.0-windows\AnlanCadAcadNet8_25.sourcelink.json
+C:\Users\86159\.zcode\workspace\af326b29-9bae-46d2-b173-457c5aef3496\anlan-cad-agent\src\AnlanCadAcadNet8_25\obj\Release\net8.0-windows\AnlanCad.929E18DC.Up2Date
+C:\Users\86159\.zcode\workspace\af326b29-9bae-46d2-b173-457c5aef3496\anlan-cad-agent\src\AnlanCadAcadNet8_25\obj\Release\net8.0-windows\AnlanCadAcadNet8_25.dll
+C:\Users\86159\.zcode\workspace\af326b29-9bae-46d2-b173-457c5aef3496\anlan-cad-agent\src\AnlanCadAcadNet8_25\obj\Release\net8.0-windows\refint\AnlanCadAcadNet8_25.dll
+C:\Users\86159\.zcode\workspace\af326b29-9bae-46d2-b173-457c5aef3496\anlan-cad-agent\src\AnlanCadAcadNet8_25\obj\Release\net8.0-windows\AnlanCadAcadNet8_25.pdb
+C:\Users\86159\.zcode\workspace\af326b29-9bae-46d2-b173-457c5aef3496\anlan-cad-agent\src\AnlanCadAcadNet8_25\obj\Release\net8.0-windows\ref\AnlanCadAcadNet8_25.dll

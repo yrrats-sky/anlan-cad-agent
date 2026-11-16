@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- AutoCAD 2025/2026（.NET 8 内核）插件目标。与 AnlanCadAcadFx48（2021-2024, csc 直编）
+       共享 src/Core + src/AnlanCadAcadFx48 全部源码，引用 lib/acad2025 = 2025 实机抓取
+       （acdbmgd.runtimeconfig.json 实锤 tfm=net8.0，2026-11-16）。
+       FX48 dll 在 2026 实测"能载但残废"：.NET 8 兼容垫片放行加载+PONG，但 System.Web.Extensions
+       (JavaScriptSerializer) 为 Framework-only，JsX 静默失效 → 面板握手死（2026-11-16 深夜破案）。
+       LangVersion=5 锁死共享源码语法（Fx48 的 csc 是 C#5 天花板，见 CLAUDE.md 守则）。 -->
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <LangVersion>5</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AssemblyName>AnlanCadAcadNet8_25</AssemblyName>
+    <Version>0.4.5</Version>
+    <Deterministic>true</Deterministic>
+    <NoWarn>$(NoWarn);NU1701</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="acmgd">
+      <HintPath>..\..\lib\acad2025\acmgd.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="acdbmgd">
+      <HintPath>..\..\lib\acad2025\acdbmgd.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="accoremgd">
+      <HintPath>..\..\lib\acad2025\accoremgd.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- WebView2 vendor（net462 单 target 兼容 .NET 6+ 装载，官方 1.0.4314 起） -->
+    <Reference Include="Microsoft.Web.WebView2.Core">
+      <HintPath>..\..\lib\WebView2\Microsoft.Web.WebView2.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Web.WebView2.Wpf">
+      <HintPath>..\..\lib\WebView2\Microsoft.Web.WebView2.Wpf.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Core\JsX.cs" />
+    <Compile Include="..\Core\LlmConfig.cs" />
+    <Compile Include="..\Core\ToolRegistry.cs" />
+    <Compile Include="..\Core\AgentLoop.cs" />
+    <Compile Include="..\Core\HttpJson.cs" />
+    <Compile Include="..\Core\VlmClient.cs" />
+    <Compile Include="..\AnlanCadAcadFx48\Entry.cs" />
+    <Compile Include="..\AnlanCadAcadFx48\AgentEngine.cs" />
+    <Compile Include="..\AnlanCadAcadFx48\PaletteHost.cs" />
+    <Compile Include="..\AnlanCadAcadFx48\SettingsForm.cs" />
+    <Compile Include="..\AnlanCadAcadFx48\WebShell.cs" />
+    <Compile Include="..\AnlanCadAcadFx48\CadBridge.cs" />
+  </ItemGroup>
+
+</Project>

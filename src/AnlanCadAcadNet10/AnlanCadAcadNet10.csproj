@@ -13,7 +13,7 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <AssemblyName>AnlanCadAcadNet10</AssemblyName>
-    <Version>0.4.3</Version>
+    <Version>0.4.5</Version>
     <Deterministic>true</Deterministic>
     <NoWarn>$(NoWarn);NU1701</NoWarn>
   </PropertyGroup>

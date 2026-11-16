@@ -67,7 +67,17 @@ function add(role, text, time) {
   log.appendChild(d);
   log.scrollTop = 1e9;
 }
-function post(o) { window.chrome.webview.postMessage(JSON.stringify(o)); }
+function post(o) {
+  var s = JSON.stringify(o);
+  try {
+    window.__anlanSeq = (window.__anlanSeq || 0) + 1;
+    (window.__anlanOutbox = window.__anlanOutbox || []).push(JSON.stringify({ i: window.__anlanSeq, d: s }));
+  } catch (e) {}
+  try { window.chrome.webview.postMessage(s); } catch (e) {}
+}
+window.__anlanDeliver = function (o) {
+  try { onMsg({ data: (typeof o === 'string' ? JSON.parse(o) : o) }); } catch (e) {}
+};
 function send() {
   var t = box.value.trim();
   if (!t) return;

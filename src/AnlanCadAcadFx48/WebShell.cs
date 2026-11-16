@@ -99,8 +99,20 @@ namespace AnlanCadAcadFx48
             return false;
         }
 
+        internal static void Mark(string name, string detail)
+        {
+            try
+            {
+                File.WriteAllText(
+                    Path.Combine(Path.GetTempPath(), name),
+                    DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " " + detail);
+            }
+            catch (Exception) { }
+        }
+
         private static void EnsureShell()
         {
+            Mark("anlan_wv_ensure.txt", "EnsureShell entered");
             AgentEngine.EnsureStarted();
             AgentEngine.Message += OnEngineMessage;
             AgentEngine.BusyChanged += OnEngineBusy;
@@ -117,6 +129,16 @@ namespace AnlanCadAcadFx48
             _wv.CreationProperties = new CoreWebView2CreationProperties();
             _wv.CreationProperties.UserDataFolder =
                 Path.Combine(Path.GetTempPath(), "AnlanCadAgent_WebView2");
+            // 远程排障：设 ANLAN_DEBUG_CDP=9223 时给本控件开专属 CDP 端口
+            //（全局 WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS 会与 Autodesk 自家 webview 抢 9222，
+            //  谁先起谁绑上，agent 的页面就看不见了——必须 per-control 端口）
+            string cdpPort = Environment.GetEnvironmentVariable("ANLAN_DEBUG_CDP");
+            if (!string.IsNullOrEmpty(cdpPort))
+            {
+                _wv.CreationProperties.AdditionalBrowserArguments =
+                    "--remote-debugging-port=" + cdpPort;
+                Mark("anlan_wv_ensure.txt", "cdp_port=" + cdpPort);
+            }
             // Source 预置：控件加载完成后自动初始化并导航（WPF 宿主标准路径）
             string html = Path.Combine(HtmlRoot(), "panel.html");
             if (File.Exists(html))
@@ -220,11 +242,68 @@ namespace AnlanCadAcadFx48
             {
                 string msg = (e.InitializationException != null)
                     ? e.InitializationException.Message : "初始化未成功";
+                Mark("anlan_wv_init.txt", "INIT-FAIL " + msg);
                 Fallback("WebView2 运行时不可用，已切兼容面板（" + msg + "）");
                 return;
             }
+            Mark("anlan_wv_init.txt", "INIT-OK source=" + (_wv.Source != null ? _wv.Source.ToString() : "null"));
             _wv.CoreWebView2.WebMessageReceived += OnWebMessage;
             _wv.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
+            Mark("anlan_wv_attach.txt", "handler attached");
+            // 轮询桥：WebMessageReceived 在部分宿主（2026 palette 实测）不触发，
+            // 用 ExecuteScriptAsync 轮询 JS 出站箱兜底（JS→C# 双通道并存，序号去重）
+            StartOutboxPoll();
+        }
+
+        private static int _outboxSeq = 0;
+        private static System.Windows.Threading.DispatcherTimer _pollTimer;
+
+        private static void StartOutboxPoll()
+        {
+            if (_pollTimer != null) return;
+            _pollTimer = new System.Windows.Threading.DispatcherTimer();
+            _pollTimer.Interval = TimeSpan.FromMilliseconds(500);
+            _pollTimer.Tick += delegate { DrainOutbox(); };
+            _pollTimer.Start();
+        }
+
+        private static int _pollCount = 0;
+
+        private static async void DrainOutbox()
+        {
+            var wv = _wv;
+            if (wv == null || wv.CoreWebView2 == null) return;
+            _pollCount++;
+            try
+            {
+                if (_pollCount <= 5)
+                    Mark("anlan_wv_poll.txt", "tick " + _pollCount + " wv_ok");
+                string result = await wv.CoreWebView2.ExecuteScriptAsync(
+                    "JSON.stringify((window.__anlanOutbox||[]).splice(0))");
+                if (_pollCount <= 5)
+                    Mark("anlan_wv_poll.txt", "tick " + _pollCount + " result=" + (result ?? "null"));
+                if (result == null || result.Length < 3) return;
+                // ExecuteScriptAsync 返回 JSON 编码值：外层是 JSON 字符串（含转义），先解出内层再解数组
+                object outer = new JsX().DeserializeObject(result);
+                string inner = outer as string;
+                if (inner == null || inner.Length < 3 || inner == "[]") return;
+                var items = new JsX().DeserializeObject(inner) as System.Collections.IEnumerable;
+                if (items == null) return;
+                foreach (object it in items)
+                {
+                    var dict = it as Dictionary<string, object>;
+                    if (dict == null) continue;
+                    object seqO, rawO;
+                    int seq;
+                    if (!dict.TryGetValue("i", out seqO) || !int.TryParse(seqO.ToString(), out seq)) continue;
+                    if (seq <= _outboxSeq) continue;
+                    _outboxSeq = seq;
+                    if (!dict.TryGetValue("d", out rawO)) continue;
+                    Mark("anlan_wv_msg.txt", "poll raw=" + (rawO.ToString() ?? "null"));
+                    HandleIncoming(rawO.ToString());
+                }
+            }
+            catch (Exception) { }
         }
 
         private static void StopInitWatch()
@@ -240,26 +319,41 @@ namespace AnlanCadAcadFx48
         {
             string raw = "";
             try { raw = e.TryGetWebMessageAsString(); } catch (Exception) { }
-            var d = Parse(raw);
-            string type = GetStr(d, "type");
-            if (type == "ready")
+            Mark("anlan_wv_msg.txt", "event raw=" + (raw ?? "null"));
+            HandleIncoming(raw);
+        }
+
+        // 事件/轮询双通道共用入口
+        private static void HandleIncoming(string raw)
+        {
+            try
             {
-                try
+                var d = Parse(raw);
+                string type = GetStr(d, "type");
+                Mark("anlan_wv_parse.txt", "raw=" + (raw ?? "null") + " type=" + type);
+                if (type == "ready")
                 {
-                    File.WriteAllText(
-                        Path.Combine(Path.GetTempPath(), "anlan_web_bridge.txt"),
-                        DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " bridge-up " + Entry.Version);
+                    try
+                    {
+                        File.WriteAllText(
+                            Path.Combine(Path.GetTempPath(), "anlan_web_bridge.txt"),
+                            DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " bridge-up " + Entry.Version);
+                    }
+                    catch (Exception) { }
+                    SendInit();
                 }
-                catch (Exception) { }
-                SendInit();
+                else if (type == "ask")
+                {
+                    AgentEngine.Ask(GetStr(d, "text"));
+                }
+                else if (type == "settings")
+                {
+                    OpenSettings();
+                }
             }
-            else if (type == "ask")
+            catch (Exception ex)
             {
-                AgentEngine.Ask(GetStr(d, "text"));
-            }
-            else if (type == "settings")
-            {
-                OpenSettings();
+                Mark("anlan_wv_parse.txt", "EXC " + ex.Message);
             }
         }
 
@@ -275,6 +369,7 @@ namespace AnlanCadAcadFx48
             d["hasKey"] = cfg.ApiKey.Length > 0;
             d["loadError"] = cfg.LoadError;
             d["busy"] = AgentEngine.Busy;
+            Mark("anlan_wv_initsent.txt", "init sent hasKey=" + (cfg.ApiKey.Length > 0) + " model=" + cfg.Model);
             Post(d);
         }
 
@@ -308,14 +403,21 @@ namespace AnlanCadAcadFx48
             }));
         }
 
-        // 投递：对象构建序列化 + 递增序号
+        // 投递：对象构建序列化 + 递增序号；事件管道异常时经脚本注入兜底（面板 n 去重防双显）
         private static void Post(Dictionary<string, object> d)
         {
             var wv = _wv;
             if (wv == null || wv.CoreWebView2 == null) return;
             _seq++;
             d["n"] = _seq;
-            wv.CoreWebView2.PostWebMessageAsJson(new JsX().Serialize(d));
+            string json = new JsX().Serialize(d);
+            try { wv.CoreWebView2.PostWebMessageAsJson(json); } catch (Exception) { }
+            try
+            {
+                wv.CoreWebView2.ExecuteScriptAsync(
+                    "window.__anlanDeliver && window.__anlanDeliver(" + json + ");");
+            }
+            catch (Exception) { }
         }
 
         private static Dictionary<string, object> Parse(string json)
@@ -326,7 +428,11 @@ namespace AnlanCadAcadFx48
                 return new JsX().DeserializeObject(json)
                     as Dictionary<string, object>;
             }
-            catch (Exception) { return null; }
+            catch (Exception ex)
+            {
+                Mark("anlan_wv_parse.txt", "PARSE-EXC " + ex.GetType().Name + ": " + ex.Message);
+                return null;
+            }
         }
 
         private static string GetStr(Dictionary<string, object> d, string k)
