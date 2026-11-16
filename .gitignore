@@ -32,4 +32,8 @@ scripts/vm-*.ps1
 tmp/
 src/AnlanCadAcadNet10/bin/
 src/AnlanCadAcadNet10/obj/
+src/AnlanCadAcadNet8/bin/
+src/AnlanCadAcadNet8/obj/
+src/AnlanCadAcadNet8_25/bin/
+src/AnlanCadAcadNet8_25/obj/
 scripts/*.log
